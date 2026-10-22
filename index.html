@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ARSIP ITNSA</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
         
@@ -62,6 +63,52 @@
         @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         .file-row:hover { background-color: #f8fafc; }
+
+        /* Kartu buku */
+        .book, .book-folder {
+            position: relative;
+            aspect-ratio: 210 / 297;
+            overflow: hidden;
+            transition: transform 0.18s ease, box-shadow 0.18s ease;
+        }
+        .book {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 3px 8px 8px 3px;
+            box-shadow: 0 1px 2px rgba(0, 45, 114, 0.12), 0 8px 16px -8px rgba(0, 45, 114, 0.28);
+        }
+        .book::before {
+            content: '';
+            position: absolute; inset: 0 auto 0 0; width: 10px; z-index: 2;
+            background: linear-gradient(90deg, rgba(0, 45, 114, 0.30), rgba(0, 45, 114, 0.07) 65%, transparent);
+            border-right: 1px solid rgba(0, 45, 114, 0.10);
+            pointer-events: none;
+        }
+        .book-folder {
+            display: flex; align-items: center; justify-content: center;
+            background: linear-gradient(160deg, #e6f6f5, #ffffff 70%);
+            border: 1px solid rgba(0, 161, 156, 0.28);
+            border-radius: 10px;
+            color: var(--petronas-cyan);
+        }
+        .card:hover .book, .card:hover .book-folder,
+        .card:focus-within .book, .card:focus-within .book-folder {
+            transform: translateY(-3px);
+            box-shadow: 0 2px 4px rgba(0, 45, 114, 0.12), 0 14px 22px -10px rgba(0, 161, 156, 0.45);
+        }
+        .card-actions { opacity: 0; transition: opacity 0.15s ease; }
+        .card:hover .card-actions, .card:focus-within .card-actions { opacity: 1; }
+        @media (hover: none) { .card-actions { opacity: 1; } }
+        .ext-chip {
+            position: absolute; right: 8px; bottom: 8px; z-index: 3; pointer-events: none;
+            font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 500;
+            letter-spacing: 0.05em; color: #fff; background: rgba(0, 45, 114, 0.85);
+            padding: 2px 6px; border-radius: 4px;
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .book, .book-folder, .card-actions { transition: none; }
+            .card:hover .book, .card:hover .book-folder { transform: none; }
+        }
 
         /* Modal Preview */
         #preview-modal.open { display: flex; }
@@ -149,19 +196,9 @@
             </div>
 
             <!-- Table View Area -->
-            <div class="grow overflow-y-auto relative">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] sticky top-0 bg-white z-10 border-b border-slate-100">
-                            <th class="px-8 py-3">Asset Name</th>
-                            <th class="px-8 py-3 hidden sm:table-cell w-32">Size</th>
-                            <th class="px-8 py-3 text-right w-32">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="file-list-body" class="divide-y divide-slate-50">
-                        <!-- List rows -->
-                    </tbody>
-                </table>
+            <div id="scroll-area" class="grow overflow-y-auto relative">
+                <div id="back-bar" class="hidden px-6 pt-4"></div>
+                <div id="file-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-x-5 gap-y-7 p-6"></div>
 
                 <!-- Loading State -->
                 <div id="loading" class="hidden absolute inset-0 bg-white/80 flex flex-col items-center justify-center z-20">
@@ -244,7 +281,8 @@
         const IMG_EXT = ['png','jpg','jpeg','gif','webp','svg','bmp','ico'];
         const MAX_TEXT_CHARS = 300000;
 
-        const fileListBody = document.getElementById('file-list-body');
+        const fileGrid = document.getElementById('file-grid');
+        const backBar = document.getElementById('back-bar');
         const sidebarTree = document.getElementById('sidebar-tree');
         const loadingEl = document.getElementById('loading');
         const emptyStateEl = document.getElementById('empty-state');
@@ -446,30 +484,130 @@
                 allFiles.sort((a, b) => (a.type === b.type) ? a.name.localeCompare(b.name) : (a.type === 'dir' ? -1 : 1));
                 renderFiles(allFiles);
             } catch (error) {
-                fileListBody.innerHTML = `<tr><td colspan="3" class="px-8 py-20 text-center text-red-500 font-mono text-xs italic">[ SYSTEM ERROR: ${escapeHtml(error.message)} ]</td></tr>`;
+                fileGrid.innerHTML = `<p class="col-span-full py-20 text-center text-red-500 font-mono text-xs italic">[ SYSTEM ERROR: ${escapeHtml(error.message)} ]</p>`;
+                backBar.classList.add('hidden');
                 showLoading(false);
             }
         }
 
+        /* ---------- Cover buku (PDF.js) ---------- */
+        if (window.pdfjsLib) {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        }
+        const COVER_WIDTH = 420;                 // lebar render cover (px)
+        const COVER_CONCURRENCY = 2;             // maksimal PDF yang diproses bersamaan
+        const COVER_MAX_BYTES = 25 * 1024 * 1024; // PDF lebih besar dari ini tidak dibuat cover
+        const coverCache = new Map();
+        const scrollArea = document.getElementById('scroll-area');
+        let coverQueue = [];
+        let coverActive = 0;
+
+        const coverObserver = new IntersectionObserver((entries) => {
+            entries.forEach(en => {
+                if (!en.isIntersecting) return;
+                coverObserver.unobserve(en.target);
+                const job = en.target._coverJob;
+                if (job) { coverQueue.push(job); pumpCovers(); }
+            });
+        }, { root: scrollArea, rootMargin: '300px' });
+
+        function pumpCovers() {
+            while (coverActive < COVER_CONCURRENCY && coverQueue.length) {
+                const job = coverQueue.shift();
+                if (!job.el.isConnected) continue;
+                coverActive++;
+                loadCover(job)
+                    .catch(() => { if (job.el.isConnected) applyCoverFallback(job.el); })
+                    .finally(() => { coverActive--; pumpCovers(); });
+            }
+        }
+
+        async function loadCover(job) {
+            if (!window.pdfjsLib) throw new Error('PDF.js tidak termuat');
+            if (job.size > COVER_MAX_BYTES) throw new Error('File terlalu besar');
+            const res = await fetch(rawUrl(job.path));
+            if (!res.ok) throw new Error('Gagal mengambil file');
+            const data = new Uint8Array(await res.arrayBuffer());
+            const pdf = await pdfjsLib.getDocument({ data }).promise;
+            try {
+                const page = await pdf.getPage(1);
+                const base = page.getViewport({ scale: 1 });
+                const vp = page.getViewport({ scale: COVER_WIDTH / base.width });
+                const canvas = document.createElement('canvas');
+                canvas.width = Math.floor(vp.width);
+                canvas.height = Math.floor(vp.height);
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = '#fff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                await page.render({ canvasContext: ctx, viewport: vp }).promise;
+                const url = canvas.toDataURL('image/jpeg', 0.82);
+                coverCache.set(job.path, url);
+                if (job.el.isConnected) applyCover(job.el, url);
+            } finally {
+                pdf.destroy();
+            }
+        }
+
+        function applyCover(el, url) {
+            const skel = el.querySelector('.cover-skel');
+            if (skel) skel.remove();
+            const img = document.createElement('img');
+            img.src = url;
+            img.alt = '';
+            img.className = 'absolute inset-0 w-full h-full object-cover object-top';
+            el.appendChild(img);
+        }
+
+        function applyCoverFallback(el) {
+            const skel = el.querySelector('.cover-skel');
+            if (!skel) return;
+            skel.classList.remove('animate-pulse');
+            skel.classList.add('text-[#E10600]/50');
+        }
+
+        /* ---------- Render kartu ---------- */
+        const FILE_LABELS = { pka: 'Packet Tracer', zip: 'Arsip', rar: 'Arsip', docx: 'Word', doc: 'Word', pptx: 'PowerPoint', xlsx: 'Excel', txt: 'Teks', md: 'Markdown', rsc: 'Skrip MikroTik' };
+
+        const ICON_PDF = '<svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>';
+        const ICON_FOLDER = '<svg class="w-16 h-16" fill="currentColor" viewBox="0 0 20 20"><path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"></path></svg>';
+        const ICON_DL = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>';
+        const ICON_GH = '<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>';
+
+        function coverMarkup(isDir, ext, name, path) {
+            if (isDir) return `<div class="book-folder">${ICON_FOLDER}</div>`;
+            if (ext === 'pdf') {
+                return `<div class="book"><div class="cover-skel absolute inset-0 flex items-center justify-center bg-slate-50 text-slate-300 animate-pulse pl-2">${ICON_PDF}</div></div>`;
+            }
+            if (IMG_EXT.includes(ext)) {
+                return `<div class="book"><img src="${rawUrl(path)}" alt="" loading="lazy" class="absolute inset-0 w-full h-full object-cover"></div>`;
+            }
+            const label = FILE_LABELS[ext] || '';
+            return `<div class="book"><div class="absolute inset-0 flex flex-col items-center justify-center gap-1.5 bg-slate-50 pl-2">
+                <span class="font-mono text-2xl text-[#002D72]">${ext ? '.' + escapeHtml(ext.toUpperCase()) : 'FILE'}</span>
+                ${label ? `<span class="text-[10px] text-slate-400">${escapeHtml(label)}</span>` : ''}
+            </div></div>`;
+        }
+
         function renderFiles(files, mode = 'normal') {
             showLoading(false);
-            fileListBody.innerHTML = '';
-            const visibleFiles = files.filter(file => (file.name || file.path.split('/').pop()).toLowerCase() !== 'index.html');
+            coverObserver.disconnect();
+            coverQueue = [];
+            fileGrid.innerHTML = '';
+            backBar.innerHTML = '';
+            backBar.classList.add('hidden');
 
-            if (visibleFiles.length === 0) {
-                emptyStateEl.classList.remove('hidden');
-                return;
-            } else {
-                emptyStateEl.classList.add('hidden');
-            }
+            const visibleFiles = files.filter(file => (file.name || file.path.split('/').pop()).toLowerCase() !== 'index.html');
+            emptyStateEl.classList.toggle('hidden', visibleFiles.length !== 0);
 
             if (mode === 'normal' && currentPath !== '') {
                 const parentPath = currentPath.split('/').slice(0, -1).join('/');
-                const backRow = document.createElement('tr');
-                backRow.className = 'hover:bg-slate-50 cursor-pointer transition text-[#00A19C] border-b border-slate-50';
-                backRow.onclick = () => fetchContents(parentPath);
-                backRow.innerHTML = `<td class="px-8 py-3 flex items-center gap-4"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7"></path></svg><span class="text-[10px] font-black uppercase tracking-widest">Return to Parent</span></td><td colspan="2"></td>`;
-                fileListBody.appendChild(backRow);
+                const back = document.createElement('button');
+                back.type = 'button';
+                back.className = 'inline-flex items-center gap-2 text-[#00A19C] hover:text-[#002D72] text-[11px] font-black uppercase tracking-widest transition';
+                back.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7"></path></svg> Kembali';
+                back.onclick = () => fetchContents(parentPath);
+                backBar.appendChild(back);
+                backBar.classList.remove('hidden');
             }
 
             visibleFiles.forEach(file => {
@@ -478,38 +616,50 @@
                 const type = file.type === 'tree' ? 'dir' : (file.type === 'blob' ? 'file' : file.type);
                 const isDir = type === 'dir';
                 const size = file.size || 0;
+                const ext = isDir ? '' : getExt(name);
                 const htmlUrl = githubUrl(path, isDir);
+                const meta = isDir ? 'Folder' : `${ext ? ext.toUpperCase() : 'FILE'}${size ? ' · ' + formatBytes(size) : ''}`;
 
-                const row = document.createElement('tr');
-                row.className = 'file-row transition group border-b border-slate-50';
-                row.innerHTML = `
-                    <td class="px-8 py-3 flex items-center gap-4 cursor-pointer" data-role="open">
-                        <span class="${isDir ? 'text-[#00A19C]' : 'text-slate-400'}">
-                            ${isDir ? '<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"></path></svg>' : '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>'}
-                        </span>
-                        <div class="flex flex-col min-w-0">
-                            <span class="text-sm font-semibold truncate group-hover:text-[#002D72] transition">${escapeHtml(name)}</span>
-                            ${mode === 'search' ? `<span class="text-[9px] text-slate-400 font-mono truncate uppercase">${escapeHtml(path)}</span>` : ''}
-                        </div>
-                    </td>
-                    <td class="px-8 py-3 text-[11px] font-mono text-slate-400 hidden sm:table-cell">${isDir ? '--' : formatBytes(size)}</td>
-                    <td class="px-8 py-3 text-right">
-                        <div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition">
-                            ${!isDir ? `<button data-role="download" class="p-1.5 text-slate-400 hover:text-[#E10600]" title="Download"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg></button>` : ''}
-                            <a href="${htmlUrl}" target="_blank" rel="noopener" class="p-1.5 text-slate-400 hover:text-[#002D72]" title="Buka di GitHub"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg></a>
-                        </div>
-                    </td>
+                const card = document.createElement('div');
+                card.className = 'card group relative flex flex-col min-w-0';
+                card.innerHTML = `
+                    <div class="relative">
+                        <button type="button" data-role="open" class="block w-full text-left rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00A19C] focus-visible:ring-offset-2" aria-label="${isDir ? 'Buka folder' : 'Preview'} ${escapeHtml(name)}">
+                            ${coverMarkup(isDir, ext, name, path)}
+                        </button>
+                        ${isDir ? '' : `<span class="ext-chip">${escapeHtml(ext ? ext.toUpperCase() : 'FILE')}</span>
+                        <div class="card-actions absolute top-2 right-2 flex gap-1 z-10">
+                            <button type="button" data-role="download" class="p-1.5 rounded-md bg-white/90 text-slate-500 shadow hover:text-[#E10600] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00A19C]" title="Download" aria-label="Download ${escapeHtml(name)}">${ICON_DL}</button>
+                            <a href="${htmlUrl}" target="_blank" rel="noopener" class="p-1.5 rounded-md bg-white/90 text-slate-500 shadow hover:text-[#002D72] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00A19C]" title="Buka di GitHub" aria-label="Buka ${escapeHtml(name)} di GitHub">${ICON_GH}</a>
+                        </div>`}
+                    </div>
+                    <button type="button" data-role="open" class="mt-2.5 text-left min-w-0 focus:outline-none">
+                        <span class="block text-[13px] font-semibold leading-snug text-slate-700 line-clamp-2 break-words group-hover:text-[#002D72] transition" title="${escapeHtml(name)}">${escapeHtml(name)}</span>
+                        <span class="block mt-0.5 text-[10px] font-mono text-slate-400">${escapeHtml(meta)}</span>
+                        ${mode === 'search' ? `<span class="block text-[9px] text-slate-400 font-mono truncate">${escapeHtml(path)}</span>` : ''}
+                    </button>
                 `;
 
-                // Event listener (bukan inline onclick) supaya nama file dengan tanda petik tetap aman
-                row.querySelector('[data-role="open"]').addEventListener('click', () => {
-                    if (isDir) fetchContents(path);
-                    else openPreview(path, name, size);
+                card.querySelectorAll('[data-role="open"]').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        if (isDir) fetchContents(path);
+                        else openPreview(path, name, size);
+                    });
                 });
-                const dlBtn = row.querySelector('[data-role="download"]');
-                if (dlBtn) dlBtn.addEventListener('click', () => downloadFile(path, name));
+                const dlBtn = card.querySelector('[data-role="download"]');
+                if (dlBtn) dlBtn.addEventListener('click', (e) => { e.stopPropagation(); downloadFile(path, name); });
 
-                fileListBody.appendChild(row);
+                fileGrid.appendChild(card);
+
+                if (ext === 'pdf') {
+                    const coverEl = card.querySelector('.book');
+                    if (coverCache.has(path)) {
+                        applyCover(coverEl, coverCache.get(path));
+                    } else {
+                        coverEl._coverJob = { path, size, el: coverEl };
+                        coverObserver.observe(coverEl);
+                    }
+                }
             });
         }
 
