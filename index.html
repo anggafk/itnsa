@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ITNSA Digital Archive - Dashboard</title>
+    <title>ARSIP ITNSA</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
@@ -53,7 +53,7 @@
             border: 1px solid #e2e8f0;
             transition: all 0.2s ease;
         }
-        .stat-card:hover { border-color: var(--petronas-cyan); shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
+        .stat-card:hover { border-color: var(--petronas-cyan); box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
 
         .loader {
             border-top-color: var(--petronas-cyan);
@@ -62,6 +62,14 @@
         @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         .file-row:hover { background-color: #f8fafc; }
+
+        /* Modal Preview */
+        #preview-modal.open { display: flex; }
+        #preview-modal.open #preview-box { animation: pop 0.18s ease-out; }
+        @keyframes pop { from { opacity: 0; transform: scale(0.97); } to { opacity: 1; transform: scale(1); } }
+        @media (prefers-reduced-motion: reduce) { #preview-modal.open #preview-box { animation: none; } }
+        .pv-btn { transition: all 0.15s ease; }
+        .pv-btn[disabled] { opacity: 0.4; pointer-events: none; }
     </style>
 </head>
 <body class="flex flex-col">
@@ -73,9 +81,8 @@
                 <span class="bg-[#E10600] w-1.5 h-6 rounded-full shadow-[0_0_10px_rgba(225,6,0,0.5)]"></span>
                 <div>
                     <h1 class="text-lg font-black tracking-tight flex items-center gap-2">
-                        ITNSA <span class="text-[#00A19C]">DIGITAL</span> ARCHIVE
+                        ARSIP <span class="text-[#00A19C]">ITNSA</span>
                     </h1>
-                    <p class="text-[10px] text-blue-200/50 font-mono uppercase tracking-widest leading-none">High-Performance System</p>
                 </div>
             </div>
             
@@ -194,13 +201,48 @@
         </div>
     </footer>
 
+    <!-- Modal Preview -->
+    <div id="preview-modal" class="hidden fixed inset-0 z-50 items-center justify-center bg-slate-900/70 p-3 sm:p-6" role="dialog" aria-modal="true" aria-labelledby="pv-title">
+        <div id="preview-box" class="bg-white w-full max-w-5xl h-[88vh] rounded-xl shadow-2xl flex flex-col overflow-hidden border-t-4 border-[#00A19C]">
+            <div class="flex items-center gap-3 px-4 py-3 border-b border-slate-200 shrink-0 bg-white">
+                <div class="min-w-0 grow">
+                    <p id="pv-title" class="text-sm font-bold text-[#002D72] truncate">-</p>
+                    <p id="pv-meta" class="text-[11px] text-slate-400 font-mono truncate">-</p>
+                </div>
+                <div class="flex items-center gap-1.5 shrink-0">
+                    <button id="pv-newtab" class="pv-btn flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#00A19C] text-white text-xs font-bold hover:bg-[#008a86]" title="Buka di tab baru" disabled>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                        <span class="hidden sm:inline">Tab baru</span>
+                    </button>
+                    <button id="pv-download" class="pv-btn flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 text-xs font-bold hover:border-[#E10600] hover:text-[#E10600]" title="Download">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        <span class="hidden sm:inline">Download</span>
+                    </button>
+                    <a id="pv-github" href="#" target="_blank" rel="noopener" class="pv-btn hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 text-xs font-bold hover:border-[#002D72] hover:text-[#002D72]" title="Buka di GitHub">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                        GitHub
+                    </a>
+                    <button id="pv-close" class="pv-btn p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-[#E10600]" title="Tutup (Esc)" aria-label="Tutup preview">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+            </div>
+            <div id="pv-body" class="grow relative overflow-auto bg-slate-100"></div>
+        </div>
+    </div>
+
     <script>
         const USER = 'anggafk';
         const REPO = 'itnsa';
+        const BRANCH = 'main';
         let currentPath = '';
         let allFiles = []; 
         let fullTree = []; 
         let isSearchMode = false;
+
+        const TEXT_EXT = ['txt','md','json','csv','tsv','log','js','ts','jsx','tsx','css','html','htm','xml','yml','yaml','ini','cfg','conf','rsc','sh','bat','ps1','py','php','java','c','cpp','h','sql','rb','go'];
+        const IMG_EXT = ['png','jpg','jpeg','gif','webp','svg','bmp','ico'];
+        const MAX_TEXT_CHARS = 300000;
 
         const fileListBody = document.getElementById('file-list-body');
         const sidebarTree = document.getElementById('sidebar-tree');
@@ -213,8 +255,143 @@
         const statFolders = document.getElementById('stat-folders');
         const statExt = document.getElementById('stat-ext');
 
+        const modal = document.getElementById('preview-modal');
+        const pvTitle = document.getElementById('pv-title');
+        const pvMeta = document.getElementById('pv-meta');
+        const pvBody = document.getElementById('pv-body');
+        const pvNewTab = document.getElementById('pv-newtab');
+        const pvDownload = document.getElementById('pv-download');
+        const pvGithub = document.getElementById('pv-github');
+        const pvClose = document.getElementById('pv-close');
+
+        let pvToken = 0;        // untuk batalin hasil fetch lama kalau popup sudah ditutup/ganti
+        let pvBlobUrl = null;   // blob URL aktif (PDF) biar bisa di-revoke
+        let pvOpenUrl = null;   // URL yang dibuka saat klik "Tab baru"
+
+        /* ---------- Helper ---------- */
+        function encodePath(p) { return p.split('/').map(encodeURIComponent).join('/'); }
+        function rawUrl(p) { return `https://raw.githubusercontent.com/${USER}/${REPO}/${BRANCH}/${encodePath(p)}`; }
+        function githubUrl(p, isDir) { return `https://github.com/${USER}/${REPO}/${isDir ? 'tree' : 'blob'}/${BRANCH}/${encodePath(p)}`; }
+        function getExt(name) { const i = name.lastIndexOf('.'); return i === -1 ? '' : name.slice(i + 1).toLowerCase(); }
+        function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+        function formatBytes(bytes, decimals = 1) {
+            if (!bytes) return '0 B';
+            const k = 1024, i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(decimals)) + ' ' + ['B', 'KB', 'MB', 'GB'][i];
+        }
+
+        /* ---------- Download (jalan juga untuk link lintas-domain) ---------- */
+        async function downloadFile(path, name) {
+            try {
+                const res = await fetch(rawUrl(path));
+                if (!res.ok) throw new Error('fetch gagal');
+                const blob = await res.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = name;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                setTimeout(() => URL.revokeObjectURL(url), 3000);
+            } catch (e) {
+                window.open(rawUrl(path), '_blank', 'noopener');
+            }
+        }
+
+        /* ---------- Preview ---------- */
+        function setBody(html) { pvBody.innerHTML = html; }
+
+        function showPvLoading() {
+            setBody(`<div class="absolute inset-0 flex flex-col items-center justify-center bg-white">
+                <div class="loader rounded-full border-4 border-slate-200 h-10 w-10 mb-3"></div>
+                <p class="text-[#00A19C] font-black text-[10px] uppercase tracking-widest animate-pulse font-mono">Loading preview...</p>
+            </div>`);
+        }
+
+        function showPvMessage(title, text) {
+            setBody(`<div class="absolute inset-0 flex flex-col items-center justify-center text-center px-6 bg-white">
+                <svg class="w-12 h-12 text-slate-200 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                <p class="text-slate-600 font-bold text-sm">${escapeHtml(title)}</p>
+                <p class="text-slate-400 text-xs mt-1 max-w-sm">${escapeHtml(text)}</p>
+            </div>`);
+        }
+
+        function releaseBlob() {
+            if (pvBlobUrl) { URL.revokeObjectURL(pvBlobUrl); pvBlobUrl = null; }
+        }
+
+        async function openPreview(path, name, size) {
+            const token = ++pvToken;
+            const ext = getExt(name);
+
+            releaseBlob();
+            pvOpenUrl = null;
+            pvTitle.textContent = name;
+            pvMeta.textContent = `${path}${size ? ' · ' + formatBytes(size) : ''}`;
+            pvGithub.href = githubUrl(path, false);
+            pvDownload.onclick = () => downloadFile(path, name);
+            pvNewTab.disabled = true;
+            pvNewTab.onclick = () => { if (pvOpenUrl) window.open(pvOpenUrl, '_blank', 'noopener'); };
+
+            modal.classList.add('open');
+            document.body.style.overflow = 'hidden';
+            showPvLoading();
+
+            try {
+                if (ext === 'pdf') {
+                    const res = await fetch(rawUrl(path));
+                    if (!res.ok) throw new Error('Gagal mengambil file (' + res.status + ')');
+                    const buf = await res.arrayBuffer();
+                    if (token !== pvToken) return;
+                    pvBlobUrl = URL.createObjectURL(new Blob([buf], { type: 'application/pdf' }));
+                    pvOpenUrl = pvBlobUrl;
+                    setBody(`<iframe src="${pvBlobUrl}" title="Preview PDF" class="absolute inset-0 w-full h-full border-0 bg-white"></iframe>`);
+                } else if (IMG_EXT.includes(ext)) {
+                    pvOpenUrl = rawUrl(path);
+                    setBody(`<div class="absolute inset-0 flex items-center justify-center p-4 overflow-auto bg-white">
+                        <img src="${rawUrl(path)}" alt="${escapeHtml(name)}" class="max-w-full max-h-full object-contain"></div>`);
+                } else if (TEXT_EXT.includes(ext)) {
+                    const res = await fetch(rawUrl(path));
+                    if (!res.ok) throw new Error('Gagal mengambil file (' + res.status + ')');
+                    let text = await res.text();
+                    if (token !== pvToken) return;
+                    pvOpenUrl = rawUrl(path);
+                    let note = '';
+                    if (text.length > MAX_TEXT_CHARS) {
+                        text = text.slice(0, MAX_TEXT_CHARS);
+                        note = '<p class="px-4 py-2 text-[11px] text-amber-700 bg-amber-50 border-b border-amber-100">File besar, hanya sebagian awal yang ditampilkan. Klik "Tab baru" untuk lihat seluruhnya.</p>';
+                    }
+                    pvBody.innerHTML = `<div class="absolute inset-0 overflow-auto bg-white">${note}<pre class="font-mono text-[13px] leading-relaxed text-slate-700 p-4 whitespace-pre-wrap break-words"></pre></div>`;
+                    pvBody.querySelector('pre').textContent = text || '(file kosong)';
+                } else {
+                    showPvMessage('File ini belum bisa dipreview', `Format .${ext || 'tanpa-ekstensi'} tidak didukung untuk preview. Silakan download file-nya.`);
+                    return;
+                }
+                if (token === pvToken) pvNewTab.disabled = false;
+            } catch (err) {
+                if (token !== pvToken) return;
+                showPvMessage('Preview gagal dimuat', err.message + '. Coba buka lewat GitHub atau download.');
+            }
+        }
+
+        function closePreview() {
+            pvToken++;
+            modal.classList.remove('open');
+            document.body.style.overflow = '';
+            setBody('');
+            releaseBlob();
+            pvOpenUrl = null;
+        }
+
+        pvClose.addEventListener('click', closePreview);
+        modal.addEventListener('click', (e) => { if (e.target === modal) closePreview(); });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && modal.classList.contains('open')) closePreview(); });
+
+        /* ---------- Data GitHub ---------- */
         async function fetchFullTree() {
-            const url = `https://api.github.com/repos/${USER}/${REPO}/git/trees/main?recursive=1`;
+            const url = `https://api.github.com/repos/${USER}/${REPO}/git/trees/${BRANCH}?recursive=1`;
             try {
                 const response = await fetch(url);
                 if (!response.ok) return;
@@ -250,7 +427,7 @@
                 const btn = document.createElement('button');
                 btn.className = `w-full flex items-center gap-3 px-6 py-2 transition text-slate-500 hover:bg-slate-100 ${currentPath === folder.path ? 'sidebar-active' : ''}`;
                 btn.onclick = () => fetchContents(folder.path);
-                btn.innerHTML = `<svg class="w-4 h-4 text-slate-400" fill="currentColor" viewBox="0 0 20 20"><path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"></path></svg> <span class="truncate">${folder.path}</span>`;
+                btn.innerHTML = `<svg class="w-4 h-4 text-slate-400" fill="currentColor" viewBox="0 0 20 20"><path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"></path></svg> <span class="truncate">${escapeHtml(folder.path)}</span>`;
                 sidebarTree.appendChild(btn);
             });
         }
@@ -262,14 +439,14 @@
             updateBreadcrumbs(path);
             renderSidebarFolders();
             try {
-                const response = await fetch(`https://api.github.com/repos/${USER}/${REPO}/contents/${path}`);
+                const response = await fetch(`https://api.github.com/repos/${USER}/${REPO}/contents/${encodePath(path)}`);
                 if (!response.ok) throw new Error('API limit or connection error');
                 const data = await response.json();
                 allFiles = Array.isArray(data) ? data : [data];
                 allFiles.sort((a, b) => (a.type === b.type) ? a.name.localeCompare(b.name) : (a.type === 'dir' ? -1 : 1));
                 renderFiles(allFiles);
             } catch (error) {
-                fileListBody.innerHTML = `<tr><td colspan="3" class="px-8 py-20 text-center text-red-500 font-mono text-xs italic">[ SYSTEM ERROR: ${error.message} ]</td></tr>`;
+                fileListBody.innerHTML = `<tr><td colspan="3" class="px-8 py-20 text-center text-red-500 font-mono text-xs italic">[ SYSTEM ERROR: ${escapeHtml(error.message)} ]</td></tr>`;
                 showLoading(false);
             }
         }
@@ -301,29 +478,37 @@
                 const type = file.type === 'tree' ? 'dir' : (file.type === 'blob' ? 'file' : file.type);
                 const isDir = type === 'dir';
                 const size = file.size || 0;
-                const htmlUrl = isDir ? `https://github.com/${USER}/${REPO}/tree/main/${path}` : `https://github.com/${USER}/${REPO}/blob/main/${path}`;
-                const downloadUrl = isDir ? null : `https://raw.githubusercontent.com/${USER}/${REPO}/main/${path}`;
+                const htmlUrl = githubUrl(path, isDir);
 
                 const row = document.createElement('tr');
                 row.className = 'file-row transition group border-b border-slate-50';
                 row.innerHTML = `
-                    <td class="px-8 py-3 flex items-center gap-4 cursor-pointer" onclick="${isDir ? `fetchContents('${path}')` : `window.open('${htmlUrl}', '_blank')`}">
+                    <td class="px-8 py-3 flex items-center gap-4 cursor-pointer" data-role="open">
                         <span class="${isDir ? 'text-[#00A19C]' : 'text-slate-400'}">
                             ${isDir ? '<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"></path></svg>' : '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>'}
                         </span>
                         <div class="flex flex-col min-w-0">
-                            <span class="text-sm font-semibold truncate group-hover:text-[#002D72] transition">${name}</span>
-                            ${mode === 'search' ? `<span class="text-[9px] text-slate-400 font-mono truncate uppercase">${path}</span>` : ''}
+                            <span class="text-sm font-semibold truncate group-hover:text-[#002D72] transition">${escapeHtml(name)}</span>
+                            ${mode === 'search' ? `<span class="text-[9px] text-slate-400 font-mono truncate uppercase">${escapeHtml(path)}</span>` : ''}
                         </div>
                     </td>
                     <td class="px-8 py-3 text-[11px] font-mono text-slate-400 hidden sm:table-cell">${isDir ? '--' : formatBytes(size)}</td>
                     <td class="px-8 py-3 text-right">
-                        <div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition">
-                            ${!isDir && downloadUrl ? `<a href="${downloadUrl}" download class="p-1.5 text-slate-400 hover:text-[#E10600]"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg></a>` : ''}
-                            <a href="${htmlUrl}" target="_blank" class="p-1.5 text-slate-400 hover:text-[#002D72]"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg></a>
+                        <div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition">
+                            ${!isDir ? `<button data-role="download" class="p-1.5 text-slate-400 hover:text-[#E10600]" title="Download"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg></button>` : ''}
+                            <a href="${htmlUrl}" target="_blank" rel="noopener" class="p-1.5 text-slate-400 hover:text-[#002D72]" title="Buka di GitHub"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg></a>
                         </div>
                     </td>
                 `;
+
+                // Event listener (bukan inline onclick) supaya nama file dengan tanda petik tetap aman
+                row.querySelector('[data-role="open"]').addEventListener('click', () => {
+                    if (isDir) fetchContents(path);
+                    else openPreview(path, name, size);
+                });
+                const dlBtn = row.querySelector('[data-role="download"]');
+                if (dlBtn) dlBtn.addEventListener('click', () => downloadFile(path, name));
+
                 fileListBody.appendChild(row);
             });
         }
@@ -332,19 +517,26 @@
 
         function updateBreadcrumbs(path, isSearch = false) {
             if (isSearch) { breadcrumbsEl.innerHTML = `<span class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-red-500"></span> GLOBAL SEARCH</span>`; return; }
-            breadcrumbsEl.innerHTML = `<span class="cursor-pointer hover:text-[#002D72] transition uppercase" onclick="fetchContents('')">/ root</span>`;
+            breadcrumbsEl.innerHTML = '';
+            const root = document.createElement('span');
+            root.className = 'cursor-pointer hover:text-[#002D72] transition uppercase';
+            root.textContent = '/ root';
+            root.onclick = () => fetchContents('');
+            breadcrumbsEl.appendChild(root);
             if (path) {
                 path.split('/').forEach((part, idx, arr) => {
                     const accPath = arr.slice(0, idx + 1).join('/');
-                    breadcrumbsEl.innerHTML += `<span class="mx-2 text-slate-300">/</span><span class="cursor-pointer hover:text-[#002D72] transition uppercase" onclick="fetchContents('${accPath}')">${part}</span>`;
+                    const sep = document.createElement('span');
+                    sep.className = 'mx-2 text-slate-300';
+                    sep.textContent = '/';
+                    const item = document.createElement('span');
+                    item.className = 'cursor-pointer hover:text-[#002D72] transition uppercase';
+                    item.textContent = part;
+                    item.onclick = () => fetchContents(accPath);
+                    breadcrumbsEl.appendChild(sep);
+                    breadcrumbsEl.appendChild(item);
                 });
             }
-        }
-
-        function formatBytes(bytes, decimals = 1) {
-            if (bytes === 0) return '0 B';
-            const k = 1024, i = Math.floor(Math.log(bytes) / Math.log(k));
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(decimals)) + ' ' + ['B', 'KB', 'MB', 'GB'][i];
         }
 
         function clearSearch() { searchInput.value = ''; fetchContents(''); }
