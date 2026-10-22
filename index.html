@@ -133,12 +133,6 @@
                 </div>
             </div>
             
-            <div class="hidden md:flex items-center gap-6">
-                <div class="text-right">
-                    <p class="text-[10px] text-blue-200/50 font-bold uppercase tracking-tighter leading-none">Repository</p>
-                    <a href="https://github.com/anggafk/itnsa" target="_blank" class="text-xs text-blue-100 hover:text-[#00A19C] transition font-medium italic">anggafk/itnsa</a>
-                </div>
-            </div>
         </div>
     </header>
 
@@ -161,28 +155,6 @@
         <!-- Main Workspace -->
         <main class="grow flex flex-col min-w-0 bg-white">
             
-            <!-- Dashboard Stats - Kotak Diperkecil -->
-            <div class="px-6 py-4 grid grid-cols-2 md:grid-cols-4 gap-3 shrink-0 bg-slate-50/50 border-b border-slate-100">
-                <div class="stat-card p-2 px-3 rounded-lg flex flex-col">
-                    <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Total File</span>
-                    <span id="stat-files" class="text-base font-black text-[#002D72] font-mono">--</span>
-                </div>
-                <div class="stat-card p-2 px-3 rounded-lg flex flex-col">
-                    <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Direktori</span>
-                    <span id="stat-folders" class="text-base font-black text-[#E10600] font-mono">--</span>
-                </div>
-                <div class="stat-card p-2 px-3 rounded-lg flex flex-col">
-                    <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Status</span>
-                    <span class="text-base font-black text-green-600 flex items-center gap-1.5">
-                        LIVE <span class="flex h-1.5 w-1.5 rounded-full bg-green-500 animate-ping"></span>
-                    </span>
-                </div>
-                <div class="stat-card p-2 px-3 rounded-lg flex flex-col">
-                    <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Format</span>
-                    <span id="stat-ext" class="text-base font-black text-slate-700 font-mono truncate">JSON</span>
-                </div>
-            </div>
-
             <!-- Toolbar: Breadcrumbs & Search (Kotak Kosong) -->
             <div class="px-6 py-3 flex flex-col md:flex-row items-center justify-between gap-4">
                 <nav id="breadcrumbs" class="flex items-center text-xs font-bold text-[#00A19C] overflow-x-auto whitespace-nowrap py-1">
@@ -255,10 +227,6 @@
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                         <span class="hidden sm:inline">Download</span>
                     </button>
-                    <a id="pv-github" href="#" target="_blank" rel="noopener" class="pv-btn hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 text-xs font-bold hover:border-[#002D72] hover:text-[#002D72]" title="Buka di GitHub">
-                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
-                        GitHub
-                    </a>
                     <button id="pv-close" class="pv-btn p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-[#E10600]" title="Tutup (Esc)" aria-label="Tutup preview">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                     </button>
@@ -289,17 +257,12 @@
         const searchInput = document.getElementById('search-input');
         const breadcrumbsEl = document.getElementById('breadcrumbs');
 
-        const statFiles = document.getElementById('stat-files');
-        const statFolders = document.getElementById('stat-folders');
-        const statExt = document.getElementById('stat-ext');
-
         const modal = document.getElementById('preview-modal');
         const pvTitle = document.getElementById('pv-title');
         const pvMeta = document.getElementById('pv-meta');
         const pvBody = document.getElementById('pv-body');
         const pvNewTab = document.getElementById('pv-newtab');
         const pvDownload = document.getElementById('pv-download');
-        const pvGithub = document.getElementById('pv-github');
         const pvClose = document.getElementById('pv-close');
 
         let pvToken = 0;        // untuk batalin hasil fetch lama kalau popup sudah ditutup/ganti
@@ -368,7 +331,6 @@
             pvOpenUrl = null;
             pvTitle.textContent = name;
             pvMeta.textContent = `${path}${size ? ' · ' + formatBytes(size) : ''}`;
-            pvGithub.href = githubUrl(path, false);
             pvDownload.onclick = () => downloadFile(path, name);
             pvNewTab.disabled = true;
             pvNewTab.onclick = () => { if (pvOpenUrl) window.open(pvOpenUrl, '_blank', 'noopener'); };
@@ -435,21 +397,8 @@
                 if (!response.ok) return;
                 const data = await response.json();
                 fullTree = data.tree || [];
-                updateDashboardStats();
                 renderSidebarFolders();
             } catch (e) { console.error(e); }
-        }
-
-        function updateDashboardStats() {
-            const filesOnly = fullTree.filter(i => i.type === 'blob' && !i.path.toLowerCase().includes('index.html'));
-            const foldersOnly = fullTree.filter(i => i.type === 'tree');
-            statFiles.innerText = filesOnly.length;
-            statFolders.innerText = foldersOnly.length;
-            const extensions = filesOnly.map(f => f.path.split('.').pop()).filter(ext => ext.length < 5);
-            const counts = {};
-            extensions.forEach(x => { counts[x] = (counts[x] || 0) + 1; });
-            const topExt = Object.keys(counts).sort((a,b) => counts[b] - counts[a])[0];
-            statExt.innerText = topExt ? topExt.toUpperCase() : 'N/A';
         }
 
         function renderSidebarFolders() {
@@ -571,7 +520,6 @@
         const ICON_PDF = '<svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>';
         const ICON_FOLDER = '<svg class="w-16 h-16" fill="currentColor" viewBox="0 0 20 20"><path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"></path></svg>';
         const ICON_DL = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>';
-        const ICON_GH = '<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>';
 
         function coverMarkup(isDir, ext, name, path) {
             if (isDir) return `<div class="book-folder">${ICON_FOLDER}</div>`;
@@ -617,7 +565,6 @@
                 const isDir = type === 'dir';
                 const size = file.size || 0;
                 const ext = isDir ? '' : getExt(name);
-                const htmlUrl = githubUrl(path, isDir);
                 const meta = isDir ? 'Folder' : `${ext ? ext.toUpperCase() : 'FILE'}${size ? ' · ' + formatBytes(size) : ''}`;
 
                 const card = document.createElement('div');
@@ -630,7 +577,6 @@
                         ${isDir ? '' : `<span class="ext-chip">${escapeHtml(ext ? ext.toUpperCase() : 'FILE')}</span>
                         <div class="card-actions absolute top-2 right-2 flex gap-1 z-10">
                             <button type="button" data-role="download" class="p-1.5 rounded-md bg-white/90 text-slate-500 shadow hover:text-[#E10600] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00A19C]" title="Download" aria-label="Download ${escapeHtml(name)}">${ICON_DL}</button>
-                            <a href="${htmlUrl}" target="_blank" rel="noopener" class="p-1.5 rounded-md bg-white/90 text-slate-500 shadow hover:text-[#002D72] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00A19C]" title="Buka di GitHub" aria-label="Buka ${escapeHtml(name)} di GitHub">${ICON_GH}</a>
                         </div>`}
                     </div>
                     <button type="button" data-role="open" class="mt-2.5 text-left min-w-0 focus:outline-none">
